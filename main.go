@@ -5,9 +5,9 @@
 package main
 
 import (
+	"github.com/hyperledgendary/conga-nft-contract/chaincode"
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
 	"github.com/hyperledger/fabric-contract-api-go/metadata"
-	"github.com/hyperledger/fabric-samples/token-erc-721/chaincode-go/chaincode"
 )
 
 func main() {

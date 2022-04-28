@@ -1,4 +1,4 @@
-module github.com/hyperledger/fabric-samples/token-erc-721/chaincode-go
+module github.com/hyperledgendary/conga-nft-contract
 
 go 1.17
 
