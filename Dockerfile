@@ -33,4 +33,4 @@ COPY --from=build /go/bin/conga-nft-contract /usr/bin/conga-nft-contract
 
 WORKDIR /var/hyperledgendary/conga-nft-contract
 ENTRYPOINT ["/usr/bin/dumb-init", "--"]
-CMD ["sh", "-c", "exec /usr/bin/conga-nft-contract -peer.address=$PEER_ADDRESS"]
+CMD ["sh", "-c", "exec /usr/bin/conga-nft-contract -peer.address=$CORE_PEER_ADDRESS"]
