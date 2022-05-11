@@ -9,8 +9,7 @@ on:
 
 jobs:
 
-  build:
-
+  chaincode_image:
     runs-on: ubuntu-latest
 
     steps:
@@ -25,3 +24,23 @@ jobs:
       env:
         DOCKER_USER: ${{ github.actor }}
         DOCKER_PW: ${{ secrets.GITHUB_TOKEN }}
+
+  chaincode_package:
+    needs: chaincode_image
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Create package
+      uses: hyperledgendary/package-k8s-chaincode-action@c17c59bc25075080c9167cb26a0008c9ff925494
+      with:
+        chaincode-label: conga-nft-contract
+        chaincode-image: ghcr.io/hyperledgendary/conga-nft-contract
+        chaincode-tag: $GITHUB_SHA
+    - name: Rename package
+      run: mv conga-nft-contract.tgz conga-nft-contract-${GITHUB_REF_NAME}.tgz
+      if: github.event_name == 'release'
+    - name: Release package
+      uses: softprops/action-gh-release@v1
+      if: github.event_name == 'release'
+      with:
+        files: conga-nft-contract-${GITHUB_REF_NAME}.tgz
