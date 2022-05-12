@@ -35,7 +35,7 @@ jobs:
       with:
         chaincode-label: conga-nft-contract
         chaincode-image: ghcr.io/hyperledgendary/conga-nft-contract
-        chaincode-tag: $GITHUB_SHA
+        chaincode-tag: ${{ github.sha }}
     - name: Rename package
       run: mv conga-nft-contract.tgz conga-nft-contract-${CHAINCODE_VERSION}.tgz
       if: startsWith(github.ref, 'refs/tags/v')
