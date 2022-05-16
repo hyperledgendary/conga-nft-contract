@@ -1,4 +1,4 @@
-name: Docker Image CI
+name: Chaincode CI
 
 on:
   push:
@@ -12,37 +12,43 @@ jobs:
   chaincode_image:
     runs-on: ubuntu-latest
 
+    outputs:
+      image_digest: ${{ steps.publish_image.outputs.image_digest }}
+
     steps:
     - uses: actions/checkout@v3
     - name: Build Docker image
       run: docker build . --file Dockerfile --tag ghcr.io/hyperledgendary/conga-nft-contract:${GITHUB_SHA}
     - name: Publish Docker image
+      id: publish_image
       if: github.event_name != 'pull_request'
       run: |
         echo ${DOCKER_PW} | docker login ghcr.io -u ${DOCKER_USER} --password-stdin
         docker push ghcr.io/hyperledgendary/conga-nft-contract:${GITHUB_SHA}
+        echo ::set-output name=image_digest::$(docker inspect ghcr.io/hyperledgendary/conga-nft-contract:${GITHUB_SHA})
       env:
         DOCKER_USER: ${{ github.actor }}
         DOCKER_PW: ${{ secrets.GITHUB_TOKEN }}
 
   chaincode_package:
+    if: needs.chaincode_image.outputs.image_digest != ''
     needs: chaincode_image
     runs-on: ubuntu-latest
 
     steps:
     - name: Create package
-      uses: hyperledgendary/package-k8s-chaincode-action@c17c59bc25075080c9167cb26a0008c9ff925494
+      uses: hyperledgendary/package-k8s-chaincode-action@d11b1aec368a903af90e2142c0e3af901e10127b
       with:
         chaincode-label: conga-nft-contract
         chaincode-image: ghcr.io/hyperledgendary/conga-nft-contract
-        chaincode-tag: ${{ github.sha }}
+        chaincode-digest: ${{ needs.chaincode_image.outputs.image_digest }}
     - name: Rename package
-      run: mv conga-nft-contract.tgz conga-nft-contract-${CHAINCODE_VERSION}.tgz
       if: startsWith(github.ref, 'refs/tags/v')
+      run: mv conga-nft-contract.tgz conga-nft-contract-${CHAINCODE_VERSION}.tgz
       env:
         CHAINCODE_VERSION: ${{ github.ref_name }}
     - name: Release package
-      uses: softprops/action-gh-release@v1
       if: startsWith(github.ref, 'refs/tags/v')
+      uses: softprops/action-gh-release@v1
       with:
         files: conga-nft-contract-${{ github.ref_name }}.tgz
