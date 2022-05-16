@@ -25,7 +25,7 @@ jobs:
       run: |
         echo ${DOCKER_PW} | docker login ghcr.io -u ${DOCKER_USER} --password-stdin
         docker push ghcr.io/hyperledgendary/conga-nft-contract:${GITHUB_SHA}
-        echo ::set-output name=image_digest::$(docker inspect ghcr.io/hyperledgendary/conga-nft-contract:${GITHUB_SHA})
+        echo ::set-output name=image_digest::$(docker inspect --format='{{index .RepoDigests 0}}' ghcr.io/hyperledgendary/conga-nft-contract:${GITHUB_SHA} | cut -d'@' -f2)
       env:
         DOCKER_USER: ${{ github.actor }}
         DOCKER_PW: ${{ secrets.GITHUB_TOKEN }}
@@ -36,6 +36,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    - name: Echo image digest
+      run: echo $IMAGE_DIGEST
+      env:
+        IMAGE_DIGEST: ${{ needs.chaincode_image.outputs.image_digest }}
     - name: Create package
       uses: hyperledgendary/package-k8s-chaincode-action@d11b1aec368a903af90e2142c0e3af901e10127b
       with:
