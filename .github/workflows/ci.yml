@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
 
     outputs:
-      image_digest: ${{ steps.image_digest.outputs.image_digest }}
+      image_digest: ${{ steps.push.outputs.digest }}
 
     steps:
     - name: Checkout
@@ -40,6 +40,7 @@ jobs:
         username: ${{ github.repository_owner }}
         password: ${{ secrets.GITHUB_TOKEN }}
     - name: Build and push
+      id: push
       uses: docker/build-push-action@v3
       with:
         context: .
@@ -47,13 +48,6 @@ jobs:
         push: ${{ github.event_name != 'pull_request' }}
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
-    - name: Output image digest
-      id: image_digest
-      if: github.event_name != 'pull_request'
-      run: |
-        echo ::set-output name=image_digest::$(docker inspect --format='{{index .RepoDigests 0}}' ghcr.io/hyperledgendary/conga-nft-contract:sha-${IMAGE_REVISION} | cut -d'@' -f2)
-      env:
-        IMAGE_REVISION: ${{ fromJSON(steps.meta.outputs.json).labels['org.opencontainers.image.revision'] }}
 
   chaincode_package:
     if: needs.chaincode_image.outputs.image_digest != ''
