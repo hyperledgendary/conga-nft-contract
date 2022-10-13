@@ -25,13 +25,10 @@ jobs:
         images: |
           ghcr.io/hyperledgendary/conga-nft-contract
         tags: |
-          type=schedule
-          type=ref,event=branch
-          type=ref,event=pr
           type=semver,pattern={{version}}
           type=semver,pattern={{major}}.{{minor}}
           type=semver,pattern={{major}}
-          type=sha
+          type=sha,format=long
     - name: Set up QEMU
       uses: docker/setup-qemu-action@v2
     - name: Set up Docker Buildx
@@ -54,7 +51,9 @@ jobs:
       id: image_digest
       if: github.event_name != 'pull_request'
       run: |
-        echo ::set-output name=image_digest::$(docker inspect --format='{{index .RepoDigests 0}}' ghcr.io/hyperledgendary/conga-nft-contract:${GITHUB_SHA} | cut -d'@' -f2)
+        echo ::set-output name=image_digest::$(docker inspect --format='{{index .RepoDigests 0}}' ghcr.io/hyperledgendary/conga-nft-contract:sha-${IMAGE_REVISION} | cut -d'@' -f2)
+      env:
+        IMAGE_REVISION: ${{ fromJSON(steps.meta.outputs.json).labels['org.opencontainers.image.revision'] }}
 
   chaincode_package:
     if: needs.chaincode_image.outputs.image_digest != ''
